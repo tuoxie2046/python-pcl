@@ -70,6 +70,17 @@ cdef class Segmentation:
         return [ind.indices[i] for i in range(ind.indices.size())],\
                [coeffs.values[i] for i in range(coeffs.values.size())]
 
+    def set_input_cloud(self, cloudarray):
+        """
+        Set input cloud of segmenter.
+        """
+        pc = PointCloud()
+        pc.from_array(cloudarray)
+        cdef cpp.SACSegmentation_t *cseg = <cpp.SACSegmentation_t *>self.me
+        cdef cpp.PointCloud_t *ccloud = <cpp.PointCloud_t *>pc.thisptr
+        cseg.setInputCloud(ccloud.makeShared())
+        return True
+
     def set_optimize_coefficients(self, bool b):
         self.me.setOptimizeCoefficients(b)
     def set_model_type(self, cpp.SacModel m):
@@ -291,7 +302,7 @@ cdef class PointCloud:
 
     def make_segmenter_normals(self, int ksearch=-1, double searchRadius=-1.0):
         """
-        Return a pcl.SegmentationNormal object with this object set as the input-cloud
+        return a pcl.SegmentationNormal object with this object set as the input-cloud
         """
         cdef cpp.PointNormalCloud_t normals
         mpcl_compute_normals(deref(self.thisptr), ksearch, searchRadius, normals)
@@ -380,6 +391,26 @@ cdef class PointCloud:
         pycloud.thisptr = out
 
         return pycloud
+
+#cdef class ImageNormalEstimation:
+#    """
+#    Computes normals at every point in an image.
+#    """
+#    cdef cpp.IntegralImageNormalEstimation_t *me
+#    def __cinit__(self):
+#        self.me = new cpp.IntegralImageNormalEstimation_t()
+#    def __dealloc__(self):
+#        del self.me
+#    def set_params(self, float depth_factor, float smoothing_size, bool depth_dependent):
+#        self.me.setNormalEstimationMethod (cpp.COVARIANCE_MATRIX);
+#        self.me.setMaxDepthChangeFactor (float);
+#        self.me.setNormalSmoothingSize (float);
+#        self.me.setDepthDependentSmoothing (bool);
+#    def set_intput_cloud(self, cloud_in, cloud_out):
+#        cdef cpp.PointCloud_t *ccloud_in = <cpp.PointCloud_t *>cloud_out.thisptr
+#        self.me.setInputCloud(ccloud_in.makeShared())
+#        cdef cpp.PointCloud_t *ccloud_out = <cpp.PointCloud_t *>cloud_out.thisptr
+#        self.me.compute (ccloud_out.makeShared());
 
 cdef class StatisticalOutlierRemovalFilter:
     """

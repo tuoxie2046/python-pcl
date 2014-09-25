@@ -36,6 +36,24 @@ cdef extern from "pcl/point_types.h" namespace "pcl":
     cdef struct Normal:
         pass
 
+#cdef extern from "pcl/features/integral_image_normal.h" namespace "pcl":
+#    cdef extern from * namespace "IntegralImageNormalEstimation":
+#        cdef enum NormalEstimationMethod:
+#            COVARIANCE_MATRIX
+#            AVERAGE_3D_GRADIENT
+#            AVERAGE_DEPTH_CHANGE
+#            SIMPLE_3D_GRADIENT
+#
+#    cdef cppclass IntegralImageNormalEstimation[T, N]:
+#        IntegralImageNormalEstimation()
+#        void setNormalEstimationMethod (NormalEstimationMethod);
+#        void setMaxDepthChangeFactor (float);
+#        void setNormalSmoothingSize (float);
+#        void setDepthDependentSmoothing (bool);
+#        void setInputCloud (shared_ptr[PointCloud[T]]);
+#        bool compute (shared_ptr[PointCloud[N]]);
+
+
 cdef extern from "pcl/features/normal_3d.h" namespace "pcl":
     cdef cppclass NormalEstimation[T, N]:
         NormalEstimation()
