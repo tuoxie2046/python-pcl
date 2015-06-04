@@ -119,17 +119,15 @@ cdef class SegmentationNormal:
         """
         pc = PointCloud()
         pc.from_array(cloudarray)
-        pcn = PointCloudNormal()
+        pcn = PointNormalCloud()
         pcn.from_array(normalsarray)
-        cdef cpp.SACSegmentation_t *cseg = <cpp.SACSegmentation_t *>self.me
+        cdef cpp.SACSegmentationNormal_t *cseg = <cpp.SACSegmentationNormal_t *>self.me
         cdef cpp.PointCloud_t *ccloud = <cpp.PointCloud_t *>pc.thisptr
-        cdef cpp.PointNormalCloud_t *normals = <cpp.PointCloudNormal_t *>pcn.thisptr
+        cdef cpp.PointNormalCloud_t *normals = <cpp.PointNormalCloud_t *>pcn.thisptr
         cseg.setInputCloud(ccloud.makeShared())
         cseg.setInputNormals (normals.makeShared());
         return True
 
-    def set_optimize_coefficients(self, bool b):
-        self.me.setOptimizeCoefficients(b)
     def set_model_type(self, cpp.SacModel m):
         self.me.setModelType(m)
     def set_method_type(self, int m):
@@ -149,19 +147,19 @@ cdef class SegmentationNormal:
     def set_axis(self, double ax, double ay, double az):
         mpcl_sacnormal_set_axis(deref(self.me),ax,ay,az)
 
-cdef class PointCloudNormal:
-    """Represents a cloud of points in 3-d space.
+cdef class PointNormalCloud:
+    """Represents a cloud of normals in 3-d space.
 
     A point cloud can be initialized from either a NumPy ndarray of shape
     (n_points, 3), from a list of triples, or from an integer n to create an
-    "empty" cloud of n points.
+    "empty" cloud of n normals.
 
     To load a point cloud from disk, use pcl.load.
     """
-    cdef cpp.PointCloud[cpp.Normal] *thisptr
+    cdef cpp.PointNormalCloud_t *thisptr
 
     def __cinit__(self, init=None):
-        self.thisptr = new cpp.PointCloud[cpp.Normal]()
+        self.thisptr = new cpp.PointNormalCloud_t()
 
         if init is None:
             return
@@ -207,8 +205,11 @@ cdef class PointCloudNormal:
 
         cdef cpp.Normal *p
         for i in range(npts):
-            p = cpp.getptr(self.thisptr, i)
+            p = cpp.getptrN(self.thisptr, i)
             p.normal_x, p.normal_y, p.normal_z = arr[i, 0], arr[i, 1], arr[i, 2]
+
+    def resize(self, cnp.npy_intp x):
+        self.thisptr.resize(x)
 
 cdef class PointCloud:
     """Represents a cloud of points in 3-d space.
@@ -268,7 +269,7 @@ cdef class PointCloud:
 
         cdef cpp.PointXYZ *p
         for i in range(npts):
-            p = cpp.getptr(self.thisptr, i)
+            p = cpp.getptrP(self.thisptr, i)
             p.x, p.y, p.z = arr[i, 0], arr[i, 1], arr[i, 2]
 
     @cython.boundscheck(False)
@@ -284,7 +285,7 @@ cdef class PointCloud:
         result = np.empty((n, 3), dtype=np.float32)
 
         for i in range(n):
-            p = cpp.getptr(self.thisptr, i)
+            p = cpp.getptrP(self.thisptr, i)
             result[i, 0] = p.x
             result[i, 1] = p.y
             result[i, 2] = p.z
@@ -301,7 +302,7 @@ cdef class PointCloud:
         self.thisptr.width = npts
         self.thisptr.height = 1
         for i, l in enumerate(_list):
-            p = cpp.getptr(self.thisptr, i)
+            p = cpp.getptrP(self.thisptr, i)
             p.x, p.y, p.z = l
 
     def to_list(self):

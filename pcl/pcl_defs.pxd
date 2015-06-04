@@ -23,7 +23,12 @@ cdef extern from "pcl/point_cloud.h" namespace "pcl":
 
 cdef extern from "indexing.hpp":
     # Use these instead of operator[] or at.
-    PointXYZ *getptr(PointCloud[PointXYZ] *, size_t)
+    # PointXYZ* getptr(PointCloud[PointXYZ] *, size_t)
+    cdef PointXYZ* getptrP "getptr<pcl::PointXYZ>"(PointCloud[PointXYZ] *, size_t)
+    cdef Normal* getptrN "getptr<pcl::Normal>"(PointCloud[Normal] *, size_t)
+    # Normal* getptr(PointCloud[Normal] *, size_t)
+    # T *getptr(PointCloud[T] *, size_t)    
+    # cdef Normal* getptrN "getptr<Normal>"(PointCloud[Normal] *, size_t)
     PointXYZ *getptr_at(PointCloud[PointXYZ] *, size_t) except +
     PointXYZ *getptr_at(PointCloud[PointXYZ] *, int, int) except +
 
@@ -34,7 +39,10 @@ cdef extern from "pcl/point_types.h" namespace "pcl":
         float y
         float z
     cdef struct Normal:
-        pass
+        Normal()
+        float normal_x
+        float normal_y
+        float normal_z
 
 #cdef extern from "pcl/features/integral_image_normal.h" namespace "pcl":
 #    cdef extern from * namespace "IntegralImageNormalEstimation":
