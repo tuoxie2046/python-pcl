@@ -6,6 +6,11 @@ from distutils.extension import Extension
 import subprocess
 import numpy
 import sys
+import platform
+import os
+
+if platform.system() == "Darwin":
+	os.environ['ARCHFLAGS'] = ''
 
 # Try to find PCL. XXX we should only do this when trying to build or install.
 # for 1.8, make sure BUILD_ENSENSO=OFF
@@ -22,11 +27,13 @@ else:
 
 # Find build/link options for PCL using pkg-config.
 pcl_libs = ["common", "features", "filters", "io", "kdtree", "octree",
-            "sample_consensus", "search", "segmentation", "surface"]
+            "registration", "sample_consensus", "search", "segmentation",
+            "surface"]
 pcl_libs = ["pcl_%s%s" % (lib, pcl_version) for lib in pcl_libs]
 
 ext_args = defaultdict(list)
 ext_args['include_dirs'].append(numpy.get_include())
+
 
 def pkgconfig(flag):
     # Equivalent in Python 2.7 (but not 2.6):
@@ -58,6 +65,9 @@ for flag in pkgconfig('--libs-only-L'):
 for flag in pkgconfig('--libs-only-other'):
     ext_args['extra_link_args'].append(flag)
 
+# Fix compile error on Ubuntu 12.04 (e.g., Travis-CI).
+ext_args['define_macros'].append(
+    ("EIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET", "1"))
 
 setup(name='python-pcl',
       description='pcl wrapper',
@@ -68,6 +78,9 @@ setup(name='python-pcl',
       license='BSD',
       packages=["pcl"],
       ext_modules=[Extension("pcl._pcl", ["pcl/_pcl.pyx", "pcl/minipcl.cpp"],
-                             language="c++", **ext_args)],
+                             language="c++", **ext_args),
+                   Extension("pcl.registration", ["pcl/registration.pyx"],
+                             language="c++", **ext_args),
+                  ],
       cmdclass={'build_ext': build_ext}
       )

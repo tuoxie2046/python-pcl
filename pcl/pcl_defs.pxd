@@ -7,6 +7,17 @@ from libcpp cimport bool
 from shared_ptr cimport shared_ptr
 from vector cimport vector as vector2
 
+cdef extern from "Eigen/Eigen" namespace "Eigen" nogil:
+    cdef cppclass Vector4f:
+        float *data()
+    cdef cppclass Quaternionf:
+        float w()
+        float x()
+        float y()
+        float z()
+    cdef cppclass aligned_allocator[T]:
+        pass
+
 cdef extern from "pcl/point_cloud.h" namespace "pcl":
     cdef cppclass PointCloud[T]:
         PointCloud() except +
@@ -20,6 +31,9 @@ cdef extern from "pcl/point_cloud.h" namespace "pcl":
         #T& at(size_t) except +
         #T& at(int, int) except +
         shared_ptr[PointCloud[T]] makeShared()
+
+        Quaternionf sensor_orientation_
+        Vector4f sensor_origin_
 
 cdef extern from "indexing.hpp":
     # Use these instead of operator[] or at.
@@ -80,6 +94,9 @@ cdef extern from "pcl/segmentation/sac_segmentation.h" namespace "pcl":
         void setInputNormals (shared_ptr[PointCloud[N]])
         void setEpsAngle (double ea)
         void segment (PointIndices, ModelCoefficients)
+        void setMinMaxOpeningAngle(double, double)
+        void getMinMaxOpeningAngle(double, double)
+
 
     cdef cppclass SACSegmentation[T]:
         void setOptimizeCoefficients (bool)
@@ -99,17 +116,13 @@ cdef extern from "pcl/surface/mls.h" namespace "pcl":
         void setSearchRadius (double)
         void setPolynomialOrder(bool)
         void setPolynomialFit(int)
-        void process (PointCloud[O])
+        void process(PointCloud[O] &) except +
 
 ctypedef MovingLeastSquares[PointXYZ,PointXYZ] MovingLeastSquares_t
 
 cdef extern from "pcl/search/kdtree.h" namespace "pcl::search":
     cdef cppclass KdTree[T]:
         KdTree()
-
-cdef extern from "Eigen/src/Core/util/Memory.h" namespace "Eigen":
-    cdef cppclass aligned_allocator[T]:
-        pass
 
 ctypedef aligned_allocator[PointXYZ] aligned_allocator_t 
 ctypedef vector2[PointXYZ, aligned_allocator_t] AlignedPointTVector_t
@@ -208,11 +221,14 @@ ctypedef shared_ptr[PointCloud[PointXYZ]] PointCloudPtr_t
 cdef extern from "pcl/filters/statistical_outlier_removal.h" namespace "pcl":
     cdef cppclass StatisticalOutlierRemoval[T]:
         StatisticalOutlierRemoval()
+        int getMeanK()
         void setMeanK (int nr_k)
+        double getStddevMulThresh()
         void setStddevMulThresh (double std_mul)
+        bool getNegative()
         void setNegative (bool negative)
         void setInputCloud (shared_ptr[PointCloud[T]])
-        void filter(PointCloud[T] c)
+        void filter(PointCloud[T] &c)
 
 ctypedef StatisticalOutlierRemoval[PointXYZ] StatisticalOutlierRemoval_t
 
