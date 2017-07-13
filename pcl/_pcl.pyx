@@ -168,10 +168,10 @@ cdef Py_ssize_t _strides[2]
 cdef PointCloud _pc_tmp = PointCloud(np.array([[1, 2, 3],
                                                [4, 5, 6]], dtype=np.float32))
 cdef cpp.PointCloud[cpp.PointXYZ] *p = _pc_tmp.thisptr()
-_strides[0] = (  <Py_ssize_t><void *>cpp.getptr(p, 1)
-               - <Py_ssize_t><void *>cpp.getptr(p, 0))
-_strides[1] = (  <Py_ssize_t><void *>&(cpp.getptr(p, 0).y)
-               - <Py_ssize_t><void *>&(cpp.getptr(p, 0).x))
+_strides[0] = (  <Py_ssize_t><void *>cpp.getptrP(p, 1)
+               - <Py_ssize_t><void *>cpp.getptrP(p, 0))
+_strides[1] = (  <Py_ssize_t><void *>&(cpp.getptrP(p, 0).y)
+               - <Py_ssize_t><void *>&(cpp.getptrP(p, 0).x))
 _pc_tmp = None
 
 
@@ -345,7 +345,7 @@ cdef class PointCloud:
 
         cdef cpp.PointXYZ *p
         for i in range(npts):
-            p = cpp.getptr(self.thisptr(), i)
+            p = cpp.getptrP(self.thisptr(), i)
             p.x, p.y, p.z = arr[i, 0], arr[i, 1], arr[i, 2]
 
     @cython.boundscheck(False)
@@ -361,8 +361,7 @@ cdef class PointCloud:
         result = np.empty((n, 3), dtype=np.float32)
 
         for i in range(n):
-            p = cpp.getptrP(self.thisptr, i)
-            p = cpp.getptr(self.thisptr(), i)
+            p = cpp.getptrP(self.thisptr(), i)
             result[i, 0] = p.x
             result[i, 1] = p.y
             result[i, 2] = p.z
@@ -379,8 +378,7 @@ cdef class PointCloud:
         self.thisptr().width = npts
         self.thisptr().height = 1
         for i, l in enumerate(_list):
-            p = cpp.getptrP(self.thisptr, i)
-            p = cpp.getptr(self.thisptr(), i)
+            p = cpp.getptrP(self.thisptr(), i)
             p.x, p.y, p.z = l
 
     def to_list(self):
@@ -458,6 +456,21 @@ cdef class PointCloud:
         return seg
 
     def make_segmenter_normals(self, int ksearch=-1, double searchRadius=-1.0):
+        """
+        return a pcl.SegmentationNormal object with this object set as the input-cloud
+        """
+        cdef cpp.PointNormalCloud_t normals
+        mpcl_compute_normals(deref(self.thisptr()), ksearch, searchRadius,
+                             normals)
+
+        seg = SegmentationNormal()
+        cdef cpp.SACSegmentationNormal_t *cseg = <cpp.SACSegmentationNormal_t *>seg.me
+        cseg.setInputCloud(self.thisptr_shared)
+        cseg.setInputNormals (normals.makeShared());
+
+        return seg
+
+    def make_segmenter_normals_cone(self, int ksearch=-1, double searchRadius=-1.0):
         """
         return a pcl.SegmentationNormal object with this object set as the input-cloud
         """
