@@ -40,6 +40,7 @@ cdef extern from "indexing.hpp":
     # PointXYZ* getptr(PointCloud[PointXYZ] *, size_t)
     cdef PointXYZ* getptrP "getptr<pcl::PointXYZ>"(PointCloud[PointXYZ] *, size_t)
     cdef Normal* getptrN "getptr<pcl::Normal>"(PointCloud[Normal] *, size_t)
+    cdef PointXYZL* getptrL "getptr<pcl::PointXYZL>"(PointCloud[PointXYZL] *, size_t)
     # Normal* getptr(PointCloud[Normal] *, size_t)
     # T *getptr(PointCloud[T] *, size_t)    
     # cdef Normal* getptrN "getptr<Normal>"(PointCloud[Normal] *, size_t)
@@ -58,6 +59,12 @@ cdef extern from "pcl/point_types.h" namespace "pcl":
         float y
         float z
         int label
+    cdef struct PointXYZRGBA:
+        PointXYZRGBA()
+        float x
+        float y
+        float z
+        float rgb
     cdef struct Normal:
         Normal()
         float normal_x
@@ -86,83 +93,40 @@ cdef extern from "pcl/features/normal_3d.h" namespace "pcl":
     cdef cppclass NormalEstimation[T, N]:
         NormalEstimation()
 
-# cdef extern from "pcl/segmentation/supervoxel_clustering.h" namespace "pcl":
-#     cdef cppclass SupervoxelClustering[T]:
-#         SupervoxelClustering(float, float)
-#         void setVoxelResolution(float)
-#         float getVoxelResolution ()
-#         void setSeedResolution (float)
-#         float getSeedResolution ()
+cdef extern from "pcl/segmentation/supervoxel_clustering.h" namespace "pcl":
+    cdef cppclass SupervoxelClustering[T]:
+        SupervoxelClustering(float, float)
+        void setVoxelResolution(float)
+        float getVoxelResolution ()
+        void setSeedResolution (float)
+        float getSeedResolution ()
+        void setColorImportance (float)
+        void setSpatialImportance (float)
+        void setNormalImportance (float)
+        void setUseSingleCameraTransform (bool)
 
-#       void setColorImportance (float val);
+        # typename pcl::PointCloud<PointXYZRGBA>::Ptr
+        # getColoredCloud ()
 
-#       void setSpatialImportance (float val);
+        # typename pcl::PointCloud<PointT>::Ptr
+        # getVoxelCentroidCloud ()
 
-#       void setNormalImportance (float val);
+        # typename pcl::PointCloud<PointXYZL>::Ptr
+        # getLabeledCloud ()
 
-#       void setUseSingleCameraTransform (bool val);
+        # pcl::PointCloud<pcl::PointXYZRGBA>::Ptr
+        # getColoredVoxelCloud ()
 
-#       typename pcl::PointCloud<PointXYZRGBA>::Ptr
-#       getColoredCloud () const
-#       { 
-#         return boost::shared_ptr<pcl::PointCloud<PointXYZRGBA> > (new pcl::PointCloud<PointXYZRGBA>);
-#       }
+        pcl::PointCloud<pcl::PointXYZL>::Ptr
+        getLabeledVoxelCloud ()
 
-#       /** \brief Returns a deep copy of the voxel centroid cloud */
-#       typename pcl::PointCloud<PointT>::Ptr
-#       getVoxelCentroidCloud () const;
+        # void getSupervoxelAdjacencyList (VoxelAdjacencyList &adjacency_list_arg)
+        # void getSupervoxelAdjacency (std::multimap<uint32_t, uint32_t> &label_adjacency)
 
-#       /** \brief Returns labeled cloud
-#         * Points that belong to the same supervoxel have the same label.
-#         * Labels for segments start from 1, unlabled points have label 0
-#         */
-#       typename pcl::PointCloud<PointXYZL>::Ptr
-#       getLabeledCloud () const;
+        # static pcl::PointCloud<pcl::PointNormal>::Ptr
+        # makeSupervoxelNormalCloud (std::map<uint32_t,typename Supervoxel<PointT>::Ptr > &supervoxel_clusters);
 
-#       /** \brief Returns an RGB colorized voxelized cloud showing superpixels
-#        * Otherwise it returns an empty pointer.
-#        * Points that belong to the same supervoxel have the same color.
-#        * But this function doesn't guarantee that different segments will have different
-#        * color(it's random). Points that are unlabeled will be black
-#        * \note This will expand the label_colors_ vector so that it can accomodate all labels
-#        */
-#       PCL_DEPRECATED ("SupervoxelClustering::getColoredVoxelCloud is deprecated. Use the getLabeledVoxelCloud function instead. examples/segmentation/example_supervoxels.cpp shows how to use this to display and save with colorized labels.")
-#       pcl::PointCloud<pcl::PointXYZRGBA>::Ptr
-#       getColoredVoxelCloud () const
-#       {
-#         return boost::shared_ptr<pcl::PointCloud<PointXYZRGBA> > (new pcl::PointCloud<PointXYZRGBA>);
-#       }
-
-#       /** \brief Returns labeled voxelized cloud
-#        * Points that belong to the same supervoxel have the same label.
-#        * Labels for segments start from 1, unlabled points have label 0
-#        */      
-#       pcl::PointCloud<pcl::PointXYZL>::Ptr
-#       getLabeledVoxelCloud () const;
-
-#       /** \brief Gets the adjacency list (Boost Graph library) which gives connections between supervoxels
-#        *  \param[out] adjacency_list_arg BGL graph where supervoxel labels are vertices, edges are touching relationships
-#        */
-#       void
-#       getSupervoxelAdjacencyList (VoxelAdjacencyList &adjacency_list_arg) const;
-
-#       /** \brief Get a multimap which gives supervoxel adjacency
-#        *  \param[out] label_adjacency Multi-Map which maps a supervoxel label to all adjacent supervoxel labels
-#        */
-#       void 
-#       getSupervoxelAdjacency (std::multimap<uint32_t, uint32_t> &label_adjacency) const;
-
-#       /** \brief Static helper function which returns a pointcloud of normals for the input supervoxels 
-#        *  \param[in] supervoxel_clusters Supervoxel cluster map coming from this class
-#        *  \returns Cloud of PointNormals of the supervoxels
-#        * 
-#        */
-#       static pcl::PointCloud<pcl::PointNormal>::Ptr
-#       makeSupervoxelNormalCloud (std::map<uint32_t,typename Supervoxel<PointT>::Ptr > &supervoxel_clusters);
-
-#       /** \brief Returns the current maximum (highest) label */
-#       int
-#       getMaxLabel () const;
+        int getMaxLabel ()
 
 cdef extern from "pcl/segmentation/sac_segmentation.h" namespace "pcl":
     cdef cppclass SACSegmentationFromNormals[T, N]:
