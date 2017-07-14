@@ -93,40 +93,40 @@ cdef extern from "pcl/features/normal_3d.h" namespace "pcl":
     cdef cppclass NormalEstimation[T, N]:
         NormalEstimation()
 
-cdef extern from "pcl/segmentation/supervoxel_clustering.h" namespace "pcl":
-    cdef cppclass SupervoxelClustering[T]:
-        SupervoxelClustering(float, float)
-        void setVoxelResolution(float)
-        float getVoxelResolution ()
-        void setSeedResolution (float)
-        float getSeedResolution ()
-        void setColorImportance (float)
-        void setSpatialImportance (float)
-        void setNormalImportance (float)
-        void setUseSingleCameraTransform (bool)
+# cdef extern from "pcl/segmentation/supervoxel_clustering.h" namespace "pcl":
+#     cdef cppclass SupervoxelClustering[T]:
+#         SupervoxelClustering(float, float)
+#         void setVoxelResolution(float)
+#         float getVoxelResolution ()
+#         void setSeedResolution (float)
+#         float getSeedResolution ()
+#         void setColorImportance (float)
+#         void setSpatialImportance (float)
+#         void setNormalImportance (float)
+#         void setUseSingleCameraTransform (bool)
 
-        # typename pcl::PointCloud<PointXYZRGBA>::Ptr
-        # getColoredCloud ()
+#         # typename pcl::PointCloud<PointXYZRGBA>::Ptr
+#         # getColoredCloud ()
 
-        # typename pcl::PointCloud<PointT>::Ptr
-        # getVoxelCentroidCloud ()
+#         # typename pcl::PointCloud<PointT>::Ptr
+#         # getVoxelCentroidCloud ()
 
-        # typename pcl::PointCloud<PointXYZL>::Ptr
-        # getLabeledCloud ()
+#         # typename pcl::PointCloud<PointXYZL>::Ptr
+#         # getLabeledCloud ()
 
-        # pcl::PointCloud<pcl::PointXYZRGBA>::Ptr
-        # getColoredVoxelCloud ()
+#         # pcl::PointCloud<pcl::PointXYZRGBA>::Ptr
+#         # getColoredVoxelCloud ()
 
-        pcl::PointCloud<pcl::PointXYZL>::Ptr
-        getLabeledVoxelCloud ()
+#         pcl::PointCloud<pcl::PointXYZL>::Ptr
+#         getLabeledVoxelCloud ()
 
-        # void getSupervoxelAdjacencyList (VoxelAdjacencyList &adjacency_list_arg)
-        # void getSupervoxelAdjacency (std::multimap<uint32_t, uint32_t> &label_adjacency)
+#         # void getSupervoxelAdjacencyList (VoxelAdjacencyList &adjacency_list_arg)
+#         # void getSupervoxelAdjacency (std::multimap<uint32_t, uint32_t> &label_adjacency)
 
-        # static pcl::PointCloud<pcl::PointNormal>::Ptr
-        # makeSupervoxelNormalCloud (std::map<uint32_t,typename Supervoxel<PointT>::Ptr > &supervoxel_clusters);
+#         # static pcl::PointCloud<pcl::PointNormal>::Ptr
+#         # makeSupervoxelNormalCloud (std::map<uint32_t,typename Supervoxel<PointT>::Ptr > &supervoxel_clusters);
 
-        int getMaxLabel ()
+#         int getMaxLabel ()
 
 cdef extern from "pcl/segmentation/sac_segmentation.h" namespace "pcl":
     cdef cppclass SACSegmentationFromNormals[T, N]:
